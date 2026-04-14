@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Testing files
+.pytest_cache/
+
+# Virtual environments
+.venv/
+
+# Project folder
+saves/
+games.toml

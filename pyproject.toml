@@ -1,0 +1,20 @@
+[project]
+name = "savemgr"
+version = "1.0.0"
+description = "SaveMGR — Game save management system"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+  "typer>=0.24.1",
+  "rich>=13",
+  "tomli-w>=1.0",
+]
+
+[project.scripts]
+savemgr = "savemgr.main:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
