@@ -50,6 +50,6 @@ def backup(
             if comment:
                 msg += f" — [italic]{comment}[/italic]"
             console.print(msg)
-    except ValueError as e:
+    except (ValueError, FileNotFoundError) as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
