@@ -32,6 +32,7 @@ def list_saves(
     table.add_column("Platform", style="yellow")
     table.add_column("Compressed")
     table.add_column("Type")
+    table.add_column("Comment", style="italic")
 
     for snap in snapshots:
         table.add_row(
@@ -39,6 +40,7 @@ def list_saves(
             snap.platform,
             "zip" if snap.compressed else "folder",
             "[dim]autosave[/dim]" if snap.autosave else "manual",
+            snap.comment or "[dim]—[/dim]",
         )
 
     console.print(table)

@@ -25,6 +25,7 @@ def _write_meta(dest: Path, snapshot: Snapshot) -> None:
         "platform": snapshot.platform,
         "compressed": snapshot.compressed,
         "autosave": snapshot.autosave,
+        "comment": snapshot.comment,
     }
     (dest / ".meta.json").write_text(json.dumps(meta, indent=2))
 
@@ -93,6 +94,7 @@ def backup(
     compress: bool = False,
     dry_run: bool = False,
     autosave: bool = False,
+    comment: str = "",
 ) -> Snapshot:
     """Create a game snapshot for the current platform.
 
@@ -105,6 +107,8 @@ def backup(
             Defaults to False.
         autosave (bool, optional): If True, the save is flagged as an autosave (before a restoration).
             Defaults to False.
+        comment (str, optional): Comment for the snapshot.
+            Defaults to "".
 
     Raises:
         ValueError: Raised if no source were configured for a platform.
@@ -125,6 +129,7 @@ def backup(
         platform=platform,
         compressed=compress,
         autosave=autosave,
+        comment=comment,
     )
 
     dest = _get_game_saves_dir(app_dir, game.slug) / snapshot.folder_name
@@ -188,6 +193,16 @@ def list_snapshots(app_dir: Path, slug: str) -> list[Snapshot]:
             # Unrecognized input
             continue
 
+        # Read comment from .meta.json if available
+        comment = ""
+        meta_path = entry if entry.is_dir() else None
+        if meta_path and (meta_path / ".meta.json").exists():
+            try:
+                meta = json.loads((meta_path / ".meta.json").read_text())
+                comment = meta.get("comment", "")
+            except (json.JSONDecodeError, OSError):
+                pass
+
         snapshots.append(
             Snapshot(
                 game_slug=slug,
@@ -195,6 +210,7 @@ def list_snapshots(app_dir: Path, slug: str) -> list[Snapshot]:
                 platform=platform,
                 compressed=compressed,
                 autosave=autosave,
+                comment=comment,
             )
         )
 

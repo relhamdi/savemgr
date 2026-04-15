@@ -8,6 +8,7 @@ class Snapshot:
     platform: str
     compressed: bool
     autosave: bool = False
+    comment: str = ""
 
     @property
     def folder_name(self) -> str:

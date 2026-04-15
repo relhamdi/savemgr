@@ -21,6 +21,11 @@ def backup(
         "--dry-run",
         help="Simulate without copying anything.",
     ),
+    comment: str = typer.Option(
+        "",
+        "--comment",
+        help="Optional comment for this snapshot.",
+    ),
 ):
     """Save game files."""
     try:
@@ -38,11 +43,13 @@ def backup(
             game,
             compress=compress,
             dry_run=dry_run,
+            comment=comment,
         )
         if not dry_run:
-            console.print(
-                f"[green]✓[/green] Snapshot created: [bold]{snap.folder_name}[/bold]"
-            )
+            msg = f"[green]✓[/green] Snapshot created: [bold]{snap.folder_name}[/bold]"
+            if comment:
+                msg += f" — [italic]{comment}[/italic]"
+            console.print(msg)
     except ValueError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
