@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -145,3 +146,25 @@ def test_backup_compressed_snapshot_is_restorable(app_dir, game_with_local_sourc
 
     restore(app_dir, game_with_local_sources, snap, dry_run=False)
     assert any(source_dir.iterdir())
+
+
+def test_backup_comment_stored_in_meta(app_dir, game_with_local_sources):
+    """Comment passed to backup should be written to .meta.json."""
+    snap = backup(app_dir, game_with_local_sources, comment="before final boss")
+    meta_path = app_dir / "saves" / "celeste" / snap.folder_name / ".meta.json"
+    meta = json.loads(meta_path.read_text())
+    assert meta["comment"] == "before final boss"
+
+
+def test_list_snapshots_reads_comment(app_dir, game_with_local_sources):
+    """list_snapshots should populate the comment field from .meta.json."""
+    backup(app_dir, game_with_local_sources, comment="level 4 cleared")
+    snapshots = list_snapshots(app_dir, "celeste")
+    assert snapshots[0].comment == "level 4 cleared"
+
+
+def test_backup_empty_comment_by_default(app_dir, game_with_local_sources):
+    """Snapshots created without --comment should have an empty comment."""
+    backup(app_dir, game_with_local_sources)
+    snapshots = list_snapshots(app_dir, "celeste")
+    assert snapshots[0].comment == ""
