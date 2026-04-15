@@ -3,8 +3,15 @@ from pathlib import Path
 
 import pytest
 
+from savemgr.core import config
 from savemgr.core.platform import get_current_platform
-from savemgr.core.snapshot import backup, delete_snapshot, list_snapshots, restore
+from savemgr.core.snapshot import (
+    backup,
+    delete_snapshot,
+    import_snapshot,
+    list_snapshots,
+    restore,
+)
 
 
 @pytest.fixture
@@ -168,3 +175,68 @@ def test_backup_empty_comment_by_default(app_dir, game_with_local_sources):
     backup(app_dir, game_with_local_sources)
     snapshots = list_snapshots(app_dir, "celeste")
     assert snapshots[0].comment == ""
+
+
+def test_import_snapshot_creates_snapshot(app_dir, sample_game, tmp_path):
+    """import_snapshot should create a valid snapshot from an external path."""
+    external = tmp_path / "external_save"
+    external.mkdir()
+    (external / "save1.dat").write_text("data")
+
+    config.add_game(app_dir, sample_game)
+    snap = import_snapshot(app_dir, sample_game, source=external)
+
+    snapshots = list_snapshots(app_dir, "celeste")
+    assert len(snapshots) == 1
+    assert snapshots[0].timestamp == snap.timestamp
+
+
+def test_import_snapshot_stores_comment(app_dir, sample_game, tmp_path):
+    """comment passed to import_snapshot should appear in .meta.json."""
+    external = tmp_path / "external_save"
+    external.mkdir()
+    (external / "save1.dat").write_text("data")
+
+    config.add_game(app_dir, sample_game)
+    snap = import_snapshot(
+        app_dir,
+        sample_game,
+        source=external,
+        comment="from nexusmods",
+    )
+
+    meta_path = app_dir / "saves" / "celeste" / snap.folder_name / ".meta.json"
+    meta = json.loads(meta_path.read_text())
+    assert meta["comment"] == "from nexusmods"
+
+
+def test_import_snapshot_single_file(app_dir, sample_game, tmp_path):
+    """import_snapshot should work with a single file as source."""
+    external_file = tmp_path / "manual_save.dat"
+    external_file.write_text("save data")
+
+    config.add_game(app_dir, sample_game)
+    snap = import_snapshot(app_dir, sample_game, source=external_file)
+
+    dest_file = app_dir / "saves" / "celeste" / snap.folder_name / external_file.name
+    assert dest_file.exists()
+
+
+def test_import_snapshot_source_not_found(app_dir, sample_game):
+    """import_snapshot should raise FileNotFoundError for missing source."""
+    config.add_game(app_dir, sample_game)
+    with pytest.raises(FileNotFoundError):
+        import_snapshot(app_dir, sample_game, source=Path("/nonexistent/path"))
+
+
+def test_import_snapshot_compressed(app_dir, sample_game, tmp_path):
+    """import_snapshot with compress=True should create a zip."""
+    external = tmp_path / "external_save"
+    external.mkdir()
+    (external / "save1.dat").write_text("data")
+
+    config.add_game(app_dir, sample_game)
+    snap = import_snapshot(app_dir, sample_game, source=external, compress=True)
+
+    zip_path = app_dir / "saves" / "celeste" / f"{snap.folder_name}.zip"
+    assert zip_path.exists()
