@@ -111,6 +111,21 @@ def test_restore_creates_autosave_first(app_dir, game_with_local_sources):
     assert any(s.autosave for s in snapshots)
 
 
+def test_restore_wipes_destination_before_copy(app_dir, game_with_local_sources):
+    """Restore should wipe destination so no extra files survive."""
+    snap = backup(app_dir, game_with_local_sources)
+
+    platform = get_current_platform()
+    source_dir = Path(game_with_local_sources.get_sources_for_platform(platform)[0])
+
+    # Create a new file that was not in the snapshot
+    (source_dir / "intruder.dat").write_text("should be gone after restore")
+
+    restore(app_dir, game_with_local_sources, snap, dry_run=False)
+
+    assert not (source_dir / "intruder.dat").exists()
+
+
 def test_backup_autosave_folder_name(app_dir, game_with_local_sources):
     """Autosave snapshots should have the correct suffix in folder name."""
     snap = backup(app_dir, game_with_local_sources, autosave=True)
