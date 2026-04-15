@@ -14,6 +14,7 @@ class GameSource:
 class Game:
     slug: str
     name: str
+    locked: bool = False
     sources: GameSource = field(default_factory=GameSource)
 
     def get_sources_for_platform(self, platform: str) -> list[str]:

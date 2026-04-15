@@ -35,7 +35,12 @@ def load_games(app_dir: Path) -> dict[str, Game]:
             linux=sources_data.get("linux", []),
             macos=sources_data.get("macos", []),
         )
-        games[slug] = Game(slug=slug, name=entry["name"], sources=sources)
+        games[slug] = Game(
+            slug=slug,
+            name=entry["name"],
+            locked=entry.get("locked", False),
+            sources=sources,
+        )
 
     return games
 
@@ -55,6 +60,7 @@ def save_games(app_dir: Path, games: dict[str, Game]) -> None:
     for slug, game in games.items():
         data["games"][slug] = {
             "name": game.name,
+            "locked": game.locked,
             "sources": {
                 "windows": game.sources.windows,
                 "linux": game.sources.linux,
@@ -112,3 +118,21 @@ def get_game(app_dir: Path, slug: str) -> Game:
     if slug not in games:
         raise KeyError(f"Game not found: {slug}")
     return games[slug]
+
+
+def set_game_locked(app_dir: Path, slug: str, locked: bool) -> None:
+    """Set the locked state of a game.
+
+    Args:
+        app_dir (Path): Application directory.
+        slug (str): Game slug.
+        locked (bool): Lock state of the game.
+
+    Raises:
+        KeyError: Raised if the game is not found.
+    """
+    games = load_games(app_dir)
+    if slug not in games:
+        raise KeyError(f"Game not found: {slug}")
+    games[slug].locked = locked
+    save_games(app_dir, games)

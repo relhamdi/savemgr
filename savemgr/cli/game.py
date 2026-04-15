@@ -57,6 +57,7 @@ def list_games():
     table = Table(title="Configured games")
     table.add_column("Slug", style="cyan")
     table.add_column("Name", style="bold")
+    table.add_column("Locked")
     table.add_column("Windows", style="dim")
     table.add_column("Linux", style="dim")
     table.add_column("macOS", style="dim")
@@ -65,6 +66,7 @@ def list_games():
         table.add_row(
             game.slug,
             game.name,
+            "[red]locked[/red]" if game.locked else "[dim]—[/dim]",
             "\n".join(game.sources.windows) or "—",
             "\n".join(game.sources.linux) or "—",
             "\n".join(game.sources.macos) or "—",
@@ -98,3 +100,41 @@ def remove_game(
 
     config.remove_game(APP_DIR, slug)
     console.print(f"[green]✓[/green] Game [bold]{game.name}[/bold] was removed.")
+
+
+@app.command("lock")
+def lock_game(
+    slug: str = typer.Argument(..., help="Game slug to lock."),
+):
+    """Lock a game to prevent backup and restore operations."""
+    try:
+        game = config.get_game(APP_DIR, slug)
+    except KeyError:
+        console.print(f"[red]Game not found:[/red] {slug}")
+        raise typer.Exit(1)
+
+    if game.locked:
+        console.print(f"[yellow]{game.name} is already locked.[/yellow]")
+        raise typer.Exit()
+
+    config.set_game_locked(APP_DIR, slug, locked=True)
+    console.print(f"[green]✓[/green] [bold]{game.name}[/bold] is now locked.")
+
+
+@app.command("unlock")
+def unlock_game(
+    slug: str = typer.Argument(..., help="Game slug to unlock."),
+):
+    """Unlock a game to allow backup and restore operations."""
+    try:
+        game = config.get_game(APP_DIR, slug)
+    except KeyError:
+        console.print(f"[red]Game not found:[/red] {slug}")
+        raise typer.Exit(1)
+
+    if not game.locked:
+        console.print(f"[yellow]{game.name} is already unlocked.[/yellow]")
+        raise typer.Exit()
+
+    config.set_game_locked(APP_DIR, slug, locked=False)
+    console.print(f"[green]✓[/green] [bold]{game.name}[/bold] is now unlocked.")

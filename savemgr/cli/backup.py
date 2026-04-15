@@ -26,12 +26,19 @@ def backup(
         "--comment",
         help="Optional comment for this snapshot.",
     ),
+    force: bool = typer.Option(False, "--force", "-f", help="Bypass lock."),
 ):
     """Save game files."""
     try:
         game = config.get_game(APP_DIR, slug)
     except KeyError:
         console.print(f"[red]Game not found:[/red] {slug}")
+        raise typer.Exit(1)
+
+    if game.locked and not force:
+        console.print(
+            f"[red]{game.name} is locked.[/red] Unlock it or use --force to bypass."
+        )
         raise typer.Exit(1)
 
     prefix = "[DRY-RUN] " if dry_run else ""

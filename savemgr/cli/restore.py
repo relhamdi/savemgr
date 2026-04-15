@@ -19,12 +19,19 @@ def restore(
         "--dry-run",
         help="Simulate without copying anything.",
     ),
+    force: bool = typer.Option(False, "--force", "-f", help="Bypass lock."),
 ):
     """Restore game files from a snapshot."""
     try:
         game = config.get_game(APP_DIR, slug)
     except KeyError:
         console.print(f"[red]Game not found:[/red] {slug}")
+        raise typer.Exit(1)
+
+    if game.locked and not force:
+        console.print(
+            f"[red]{game.name} is locked.[/red] Unlock it or use --force to bypass."
+        )
         raise typer.Exit(1)
 
     snapshots = snapshot_core.list_snapshots(APP_DIR, slug)
