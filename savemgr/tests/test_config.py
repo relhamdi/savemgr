@@ -1,6 +1,12 @@
 import pytest
 
-from savemgr.core.config import add_game, get_game, load_games, remove_game
+from savemgr.core.config import (
+    add_game,
+    get_game,
+    load_games,
+    remove_game,
+    set_game_locked,
+)
 from savemgr.models.game import Game, GameSource
 
 
@@ -71,3 +77,34 @@ def test_load_games_preserves_all_sources(app_dir, sample_game):
     assert len(game.sources.windows) == 2
     assert len(game.sources.linux) == 1
     assert len(game.sources.macos) == 1
+
+
+def test_set_game_locked(app_dir, sample_game):
+    """set_game_locked should persist the locked state."""
+    add_game(app_dir, sample_game)
+    set_game_locked(app_dir, "celeste", locked=True)
+    game = get_game(app_dir, "celeste")
+    assert game.locked is True
+
+
+def test_set_game_unlocked(app_dir, sample_game):
+    """set_game_locked should be able to unlock a previously locked game."""
+    add_game(app_dir, sample_game)
+    set_game_locked(app_dir, "celeste", locked=True)
+    set_game_locked(app_dir, "celeste", locked=False)
+    game = get_game(app_dir, "celeste")
+    assert game.locked is False
+
+
+def test_set_game_locked_not_found(app_dir):
+    """set_game_locked should raise KeyError for unknown slug."""
+    with pytest.raises(KeyError):
+        set_game_locked(app_dir, "unknown", locked=True)
+
+
+def test_locked_state_roundtrip(app_dir, sample_game):
+    """locked field should survive a write/read roundtrip."""
+    sample_game.locked = True
+    add_game(app_dir, sample_game)
+    game = get_game(app_dir, "celeste")
+    assert game.locked is True
