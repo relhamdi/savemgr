@@ -259,24 +259,34 @@ def restore(
             with zipfile.ZipFile(zip_path, "r") as zf:
                 zf.extractall(snapshot_path)
 
-    if not dry_run:
-        # Autosave before restore
-        backup(app_dir, game, compress=False, dry_run=False, autosave=True)
-
     for raw_path in sources:
         dest = resolve_path(raw_path)
         src = snapshot_path / Path(raw_path).name
 
         if not src.exists():
-            print(f"  [WARN] Source not found in the snapshot: {src.name}")
+            print(f"  [WARN] Source not found in snapshot: {src.name}")
             continue
 
         if dry_run:
             print(f"[DRY-RUN] {src} -> {dest}")
             continue
 
+        # Autosave only if destination currently exists
+        dest_exists = dest.exists()
+        if dest_exists:
+            backup(app_dir, game, compress=False, dry_run=False, autosave=True)
+        else:
+            print(f"  [INFO] Destination does not exist, skipping autosave: {dest}")
+
+        # Clear destination before restore
+        if dest_exists:
+            if dest.is_dir():
+                shutil.rmtree(dest)
+            else:
+                dest.unlink()
+
         if src.is_dir():
-            shutil.copytree(src, dest, dirs_exist_ok=True)
+            shutil.copytree(src, dest)
         else:
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
