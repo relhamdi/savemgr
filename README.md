@@ -165,7 +165,13 @@ savemgr restore <slug> --dry-run
 savemgr restore <slug> <timestamp> --dry-run
 ```
 
-> **Important:** Before any restore, savemgr automatically creates an autosave snapshot of the current state. These snapshots are named `YYYYMMDD_HHMMSS-{platform}_autosave` and are listed alongside manual snapshots.
+**Restore behavior:**
+
+- The destination directory is **wiped before copying**, so the restored state is identical to what was saved — no leftover files from a later session survive.
+- Before wiping, SaveMGR automatically creates an **autosave** snapshot of the current state, so nothing is lost.
+- If a destination path does not exist (e.g. game not yet installed), no autosave is created for that path. A warning is displayed and a confirmation is required before proceeding.
+
+> Note: Autosave snapshots are named `YYYYMMDD_HHMMSS-{platform}_autosave` and appear in `save list` alongside manual snapshots.
 
 ### `save` — manage snapshots
 
@@ -259,5 +265,4 @@ uv run pytest
 
 - **Snapshot comments** — annotate a snapshot with a note (`--comment "before final boss"`)
 - **External save import** — import a save file from outside SaveMGR into the versioning system
-- **Explicit behavior on missing paths** — clear error or warning when a configured source path does not exist at backup or restore time
 - **Game lock** — protect a game from accidental restore operations
