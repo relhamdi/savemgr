@@ -312,3 +312,61 @@ def restore(
     # Clear the temporary folder after extraction
     if snapshot.compressed and not dry_run and snapshot_path.exists():
         shutil.rmtree(snapshot_path)
+
+
+def import_snapshot(
+    app_dir: Path,
+    game: Game,
+    source: Path,
+    compress: bool = False,
+    comment: str = "",
+) -> Snapshot:
+    """Import an external save file or directory into the versioning system.
+    Creates a standard snapshot from the provided source path.
+
+    Args:
+        app_dir (Path): Application directory.
+        game (Game): Game object.
+        source (Path): Path to the external save.
+        compress (bool, optional): If True, will compress the save in a ZIP file.
+            Defaults to False.
+        comment (str, optional): Comment for the snapshot.
+            Defaults to "".
+
+    Raises:
+        FileNotFoundError: Raised if the source path does not exist.
+
+    Returns:
+        Snapshot: Created snapshot.
+    """
+    if not source.exists():
+        raise FileNotFoundError(f"Import source not found: {source}")
+
+    platform = get_current_platform()
+    timestamp = _make_timestamp()
+
+    snapshot = Snapshot(
+        game_slug=game.slug,
+        timestamp=timestamp,
+        platform=platform,
+        compressed=compress,
+        autosave=False,
+        comment=comment,
+    )
+
+    dest = _get_game_saves_dir(app_dir, game.slug) / snapshot.folder_name
+    dest.mkdir(parents=True, exist_ok=True)
+
+    target = dest / source.name
+
+    if source.is_dir():
+        shutil.copytree(source, target, dirs_exist_ok=True)
+    else:
+        shutil.copy2(source, target)
+
+    _write_meta(dest, snapshot)
+
+    if compress:
+        _compress_snapshot(dest)
+
+    return snapshot
