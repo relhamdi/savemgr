@@ -129,6 +129,12 @@ savemgr game list
 # Remove a game from the registry (snapshots are not deleted)
 savemgr game remove <slug>
 savemgr game remove <slug> --force
+
+# Lock a game (prevents backup and restore)
+savemgr game lock <slug>
+
+# Unlock a game
+savemgr game unlock <slug>
 ```
 
 ### `backup` — create a snapshot
@@ -136,12 +142,17 @@ savemgr game remove <slug> --force
 ```bash
 # Back up a game's save files
 savemgr backup <slug>
+savemgr backup <slug> --force      # bypass lock
 
 # Preview what would be copied without doing anything
 savemgr backup <slug> --dry-run
 
 # Back up and compress the snapshot into a zip file
 savemgr backup <slug> --compress
+
+# Back up and add a comment about the snapshot
+savemgr backup <slug> --comment "before final boss"
+
 ```
 
 Snapshots are named using the format `YYYYMMDD_HHMMSS-{platform}`, for example:
@@ -156,6 +167,7 @@ Snapshots are named using the format `YYYYMMDD_HHMMSS-{platform}`, for example:
 ```bash
 # Restore the most recent snapshot
 savemgr restore <slug>
+savemgr restore <slug> --force     # bypass lock
 
 # Restore a specific snapshot by timestamp
 savemgr restore <slug> <timestamp>
@@ -172,6 +184,16 @@ savemgr restore <slug> <timestamp> --dry-run
 - If a destination path does not exist (e.g. game not yet installed), no autosave is created for that path. A warning is displayed and a confirmation is required before proceeding.
 
 > Note: Autosave snapshots are named `YYYYMMDD_HHMMSS-{platform}_autosave` and appear in `save list` alongside manual snapshots.
+
+### `import` — import an external save
+
+```bash
+# Import a save file or directory into the versioning system
+savemgr import <slug> <path>
+savemgr import <slug> <path> --compress
+savemgr import <slug> <path> --comment "from nexusmods"
+```
+
 
 ### `save` — manage snapshots
 
@@ -258,11 +280,3 @@ $ savemgr backup celeste --dry-run
 ```bash
 uv run pytest
 ```
-
----
-
-## Roadmap
-
-- **Snapshot comments** — annotate a snapshot with a note (`--comment "before final boss"`)
-- **External save import** — import a save file from outside SaveMGR into the versioning system
-- **Game lock** — protect a game from accidental restore operations
