@@ -28,7 +28,7 @@ def backup(
     ),
     force: bool = typer.Option(False, "--force", "-f", help="Bypass lock."),
 ):
-    """Save game files."""
+    """Backup a game's save files."""
     try:
         game = config.get_game(APP_DIR, slug)
     except KeyError:
