@@ -43,6 +43,21 @@ def restore(
         snap = snapshots[0]  # Most recent
         console.print(f"[dim]Selected snapshot: {snap.folder_name}[/dim]")
 
+    # Warn if any destination path does not exist
+    platform = snapshot_core.get_current_platform()
+    missing = [
+        p
+        for p in game.get_sources_for_platform(platform)
+        if not snapshot_core.resolve_path(p).exists()
+    ]
+    if missing:
+        console.print(
+            "\n[yellow]Warning: the following destination paths do not exist:[/yellow]"
+        )
+        for p in missing:
+            console.print(f"  [dim]{p}[/dim]")
+        console.print("[yellow]No autosave will be created for these paths.[/yellow]\n")
+
     prefix = "[DRY-RUN] " if dry_run else ""
     console.print(
         f"\n{prefix}[bold]Restoring[/bold] [cyan]{game.name}[/cyan] — [bold]{snap.folder_name}[/bold]"
