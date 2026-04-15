@@ -41,6 +41,9 @@ def _copy_sources(
         dest (Path): Destination path.
         dry_run (bool): If True, will perform a dry-run (just logging what will be done).
 
+    Raises:
+        FileNotFoundError: Raised if any source path does not exist.
+
     Returns:
         list[tuple[Path, Path]]: List of the processed (source, destination) tuples.
     """
@@ -52,8 +55,7 @@ def _copy_sources(
         target = dest / src.name
 
         if not src.exists():
-            print(f"  [WARN] Source not found, ignored: {src}")
-            continue
+            raise FileNotFoundError(f"Source path not found: {src}")
 
         operations.append((src, target))
 
